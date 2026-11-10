@@ -35,7 +35,7 @@ const policy = await privy.policies().create({
   owner: { public_key: authorizationPublicKey() },
   rules: [
     {
-      name: "Pay the Stripe deposit address within the per-payment cap",
+      name: "pay stripe up to $0.05 per payment",
       method: "eth_signTransaction",
       action: "ALLOW",
       conditions: [
