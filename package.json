@@ -9,7 +9,10 @@
     "agent": "tsx agent/run.ts",
     "validate": "npx mppx@latest validate http://localhost:4242",
     "typecheck": "tsc --noEmit",
-    "check:stripe": "tsx scripts/check-stripe.ts"
+    "check:stripe": "tsx scripts/check-stripe.ts",
+    "wallet:create": "tsx scripts/create-wallet.ts",
+    "policy:create": "tsx scripts/create-policy.ts",
+    "check:policy": "tsx scripts/check-policy.ts"
   },
   "engines": {
     "node": ">=20"
