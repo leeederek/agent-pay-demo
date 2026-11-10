@@ -8,9 +8,22 @@
     "server": "tsx server/index.ts",
     "agent": "tsx agent/run.ts",
     "validate": "npx mppx@latest validate http://localhost:4242",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:stripe": "tsx scripts/check-stripe.ts"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@privy-io/node": "^0.38.0",
+    "dotenv": "^18.0.10",
+    "mppx": "^0.18.0",
+    "stripe": "^23.1.0",
+    "viem": "^2.57.17"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }
