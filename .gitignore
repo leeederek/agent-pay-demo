@@ -5,3 +5,8 @@ node_modules/
 CLAUDE.local.md
 dist/
 .DS_Store
+
+# Planning docs, kept local only
+CLAUDE.md
+docs/SPEC.md
+docs/DECISIONS.md
