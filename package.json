@@ -1,0 +1,16 @@
+{
+  "name": "agent-pay-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An AI agent with a Privy wallet and spending policy that pays a Stripe-backed API over MPP, plus an eval harness.",
+  "type": "module",
+  "scripts": {
+    "server": "tsx server/index.ts",
+    "agent": "tsx agent/run.ts",
+    "validate": "npx mppx@latest validate http://localhost:4242",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
