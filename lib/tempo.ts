@@ -1,0 +1,47 @@
+// Tempo testnet: building payment transactions, balances, and the testnet faucet.
+// Scripts and agents get transactions from here; they never encode calldata themselves.
+import { createClient, encodeFunctionData, http, pad, parseUnits, type Hex } from "viem";
+import { tempoModerato } from "viem/chains";
+import { Abis, Actions } from "viem/tempo";
+import { TEMPO_TESTNET_CHAIN_ID, USD_TOKEN, USD_TOKEN_DECIMALS } from "./policy.ts";
+
+// Hard rule: testnet only.
+if (tempoModerato.id !== TEMPO_TESTNET_CHAIN_ID) {
+  throw new Error(`Expected Tempo testnet (${TEMPO_TESTNET_CHAIN_ID}), got chain ${tempoModerato.id}.`);
+}
+
+export const tempoChain = tempoModerato;
+const client = createClient({ chain: tempoModerato, transport: http() });
+
+// A Tempo (type 118) transaction paying `amountUsd` of the USD token to `recipient`, the same shape
+// mppx builds: one transferWithMemo call. Gas and fee values only need to be plausible for sign-only use.
+export function paymentTransaction({ recipient, amountUsd }: { recipient: Hex; amountUsd: string }) {
+  const data = encodeFunctionData({
+    abi: Abis.tip20,
+    functionName: "transferWithMemo",
+    args: [recipient, parseUnits(amountUsd, USD_TOKEN_DECIMALS), pad("0x01")],
+  });
+  return {
+    type: "tempo" as const,
+    chainId: TEMPO_TESTNET_CHAIN_ID,
+    calls: [{ to: USD_TOKEN, data }],
+    nonce: 0,
+    gas: 100_000n,
+    maxFeePerGas: 20_000_000_000n,
+    maxPriorityFeePerGas: 0n,
+    feeToken: USD_TOKEN,
+    validBefore: Math.floor(Date.now() / 1000) + 60,
+  };
+}
+
+export type PaymentTransaction = ReturnType<typeof paymentTransaction>;
+
+export async function usdBalance(address: Hex): Promise<string> {
+  const balance = await Actions.token.getBalance(client, { account: address, token: USD_TOKEN });
+  return balance.formatted;
+}
+
+// Asks the testnet faucet (tempo_fundAddress) to mint test stablecoins, including the USD token, to `address`.
+export async function fundFromFaucet(address: Hex) {
+  return Actions.faucet.fundSync(client, { account: address, timeout: 30_000 });
+}
