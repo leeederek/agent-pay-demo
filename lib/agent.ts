@@ -29,10 +29,19 @@ export type PaidItem = Pick<PaymentAttempt, "amountUsd" | "recipient"> & {
   reference?: string;
 };
 
+// What the agent spent on thinking. Self-reported: the harness sees an agent's payments, not its LLM calls.
+export type Usage = {
+  llmCalls: number;
+  inputTokens: number;
+  outputTokens: number;
+};
+
 export type AgentResult = {
   paid: PaidItem[];
   // The work product (e.g. the briefing), or why the agent stopped (e.g. "allowance ended, 4 of 5 done").
   result: string;
+  // Optional, so agents without an LLM (like the Phase 1 script) can leave it out.
+  usage?: Usage;
 };
 
 // The harness hands the agent its way to pay, so it controls the wallet (policy on/off) and keeps the record.
