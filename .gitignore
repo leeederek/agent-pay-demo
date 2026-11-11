@@ -10,6 +10,7 @@ dist/
 CLAUDE.md
 docs/SPEC.md
 docs/DECISIONS.md
+docs/WALKTHROUGH.md
 
 # Files the agent buys
 agent/out/

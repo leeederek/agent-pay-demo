@@ -67,18 +67,29 @@ export async function createAndAttachPolicy({ windowSeconds = DEFAULT_WINDOW_SEC
     ],
   });
 
+  const previous = (await privy.wallets().get(walletId)).policy_ids ?? [];
   await privy.wallets().update(walletId, {
     policy_ids: [policy.id],
     authorization_context: authorizationContext(),
   });
 
-  return { policyId: policy.id, walletId, recipient, cap, windowEndsAt };
+  // The replaced policies are no longer attached to anything; delete them so they don't pile up.
+  const deleted: string[] = [];
+  for (const id of previous.filter((id) => id !== policy.id)) {
+    await privy.policies().delete(id, { authorization_context: authorizationContext() });
+    deleted.push(id);
+  }
+
+  return { policyId: policy.id, walletId, recipient, cap, windowEndsAt, deleted };
 }
 
-// When the wallet's current allowance window ends (unix seconds), read back from the policy in Privy,
-// so scripts and the agent don't need it in .env.
+// When the wallet's current allowance window ends (unix seconds), read from the policy attached to the
+// wallet in Privy, so it's always the live one and nothing needs updating in .env.
 export async function currentWindowEndsAt(): Promise<number> {
-  const policy = await privyClient().policies().get(requireEnv("PRIVY_POLICY_ID"));
+  const privy = privyClient();
+  const [policyId] = (await privy.wallets().get(requireEnv("PRIVY_WALLET_ID"))).policy_ids ?? [];
+  if (!policyId) throw new Error("The wallet has no policy attached. Run npm run policy:create.");
+  const policy = await privy.policies().get(policyId);
   const condition = policy.rules
     .flatMap((rule) => rule.conditions)
     .find((c) => c.field_source === "system" && c.field === "current_unix_timestamp");
