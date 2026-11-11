@@ -51,7 +51,7 @@ You need Node 20+, a [Privy](https://dashboard.privy.io) development app, and a 
 3. Stripe: create a Stripe profile in the sandbox Dashboard, then run `npm run check:stripe -- --create`. Copy the profile ID into `STRIPE_PROFILE_ID` and the Tempo deposit address into `TEMPO_DEPOSIT_ADDRESS`.
 4. Wallet: `npm run wallet:create`, then copy `PRIVY_WALLET_ID` and `PRIVY_WALLET_ADDRESS` into `.env`.
 5. Funds: `npm run wallet:fund` (Tempo testnet faucet, test pathUSD).
-6. Policy: `npm run policy:create`. It attaches the policy to the wallet and deletes the one it replaces; scripts read the attached policy from Privy, so nothing needs copying (`PRIVY_POLICY_ID` in `.env` is for reference). The allowance window lasts 1 hour; re-run to open a new one.
+6. Policy: `npm run policy:create` (preset `research-run` by default). It attaches the policy to the wallet and deletes the one it replaces; scripts read the attached policy from Privy, so nothing needs copying (`PRIVY_POLICY_ID` in `.env` is for reference). The allowance window lasts 1 hour; re-run to open a new one.
 7. Check the policy: `npm run check:policy` should print `6/6 cases behaved as expected`.
 
 ## Run
@@ -66,6 +66,7 @@ Start the paid API in one terminal and run the agent in another.
 | `npm run agent -- --report premium` | Tries the $1.10 report: refused, over the $1.00 cap |
 | `npm run agent -- --repeat [--every 5]` | Keeps buying until the wallet refuses, then stops |
 | `npm run policy:create -- --window 60` | Opens a 60-second window (pair with `--repeat` to watch it close) |
+| `npm run policy:create -- --preset <name>` | Picks a preset: `starter` ($0.50/payment, 15 min), `research-run` ($1.00, 1h, the default), `api-spender` ($1.00, 24h). No preset has a total cap (see Known limits) |
 
 Server test modes (each logs that it's on):
 

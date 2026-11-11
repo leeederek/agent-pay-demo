@@ -1,7 +1,8 @@
-// The spending policy: its values, its rules, and attaching it to the agent's wallet.
+// The spending policy: its rules, and attaching it to the agent's wallet.
 // The only place policy rules are defined. Scripts and agents call this; they never build rules themselves.
-import { parseUnits, toHex, type Hex } from "viem";
+import { formatUnits, parseUnits, toHex, type Hex } from "viem";
 import { requireEnv } from "./env.ts";
+import type { Allowance } from "./presets.ts";
 import { authorizationContext, authorizationPublicKey, privyClient } from "./privy.ts";
 
 export const TEMPO_TESTNET_CHAIN_ID = 42431;
@@ -9,12 +10,6 @@ export const TEMPO_TESTNET_CHAIN_ID = 42431;
 // Stablecoin Stripe accepts at our Tempo deposit address (from `npm run check:stripe`).
 export const USD_TOKEN: Hex = "0x20c0000000000000000000000000000000000000";
 export const USD_TOKEN_DECIMALS = 6;
-
-// Stripe won't record a payment under $0.50, so the paid API charges $0.50 and the cap leaves room for one.
-export const PER_PAYMENT_CAP_USD = "1.00";
-
-// How long an allowance lasts from `npm run policy:create`. The demo passes a short one with --window.
-export const DEFAULT_WINDOW_SECONDS = 60 * 60;
 
 // The token function mppx calls for each payment (TIP-20 transferWithMemo).
 export const transferWithMemoAbi = [
@@ -31,22 +26,22 @@ export const transferWithMemoAbi = [
   },
 ];
 
-// Rules: Tempo testnet only, the USD token only, recipient = Stripe deposit address, amount <= cap,
+// Rules: Tempo testnet only, the USD token only, recipient = the allowed merchant, amount <= cap,
 // fees paid in the USD token, and a time window: Privy refuses to sign after the window ends, and refuses
 // any transaction whose valid_before is later than the end. Tempo then refuses to execute a signed
 // payment after its valid_before, so a signature held past the window is worthless.
 // The policy is owned by our authorization key, so the app secret alone can't loosen it.
-// Creates a fresh policy (and a fresh window) and replaces the one on the wallet.
-export async function createAndAttachPolicy({ windowSeconds = DEFAULT_WINDOW_SECONDS } = {}) {
+// Creates a fresh policy (and a fresh window), replaces the one on the wallet, and deletes the old one.
+export async function createAndAttachPolicy(allowance: Allowance & { presetName: string }) {
   const walletId = requireEnv("PRIVY_WALLET_ID");
-  const recipient = requireEnv("TEMPO_DEPOSIT_ADDRESS").toLowerCase();
-  const cap = toHex(parseUnits(PER_PAYMENT_CAP_USD, USD_TOKEN_DECIMALS));
-  const windowEndsAt = Math.floor(Date.now() / 1000) + windowSeconds;
+  const recipient = allowance.merchant.toLowerCase();
+  const cap = toHex(parseUnits(allowance.perPaymentCapUsd, USD_TOKEN_DECIMALS));
+  const windowEndsAt = Math.floor(Date.now() / 1000) + allowance.windowSeconds;
   const privy = privyClient();
 
   const policy = await privy.policies().create({
     version: "1.0",
-    name: `Allowance: pay Stripe up to $${PER_PAYMENT_CAP_USD} per payment until ${new Date(windowEndsAt * 1000).toISOString()}`,
+    name: `Allowance (${allowance.presetName}): up to $${allowance.perPaymentCapUsd} per payment until ${new Date(windowEndsAt * 1000).toISOString()}`,
     chain_type: "ethereum",
     owner: { public_key: authorizationPublicKey() },
     rules: [
@@ -83,16 +78,30 @@ export async function createAndAttachPolicy({ windowSeconds = DEFAULT_WINDOW_SEC
   return { policyId: policy.id, walletId, recipient, cap, windowEndsAt, deleted };
 }
 
-// When the wallet's current allowance window ends (unix seconds), read from the policy attached to the
-// wallet in Privy, so it's always the live one and nothing needs updating in .env.
-export async function currentWindowEndsAt(): Promise<number> {
+// The allowance currently in force, read back from the policy attached to the wallet in Privy, so it's
+// always the live one and nothing needs updating in .env.
+export async function currentAllowance(): Promise<{
+  policyId: string;
+  name: string;
+  perPaymentCapUsd: string;
+  merchant: Hex;
+  windowEndsAt: number;
+}> {
   const privy = privyClient();
   const [policyId] = (await privy.wallets().get(requireEnv("PRIVY_WALLET_ID"))).policy_ids ?? [];
   if (!policyId) throw new Error("The wallet has no policy attached. Run npm run policy:create.");
   const policy = await privy.policies().get(policyId);
-  const condition = policy.rules
-    .flatMap((rule) => rule.conditions)
-    .find((c) => c.field_source === "system" && c.field === "current_unix_timestamp");
-  if (!condition) throw new Error(`Policy ${policy.id} has no time window. Re-run npm run policy:create.`);
-  return Number(condition.value);
+  const conditions = policy.rules.flatMap((rule) => rule.conditions);
+  const find = (source: string, field: string) => {
+    const c = conditions.find((c) => c.field_source === source && c.field === field);
+    if (!c) throw new Error(`Policy ${policy.id} has no ${field} rule. Re-run npm run policy:create.`);
+    return String(c.value);
+  };
+  return {
+    policyId: policy.id,
+    name: policy.name,
+    perPaymentCapUsd: formatUnits(BigInt(find("ethereum_calldata", "transferWithMemo.amount")), USD_TOKEN_DECIMALS),
+    merchant: find("ethereum_calldata", "transferWithMemo.to") as Hex,
+    windowEndsAt: Number(find("system", "current_unix_timestamp")),
+  };
 }

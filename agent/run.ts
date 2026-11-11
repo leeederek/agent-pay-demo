@@ -6,11 +6,9 @@
 //   (start the paid API first: npm run server). premium costs $1.10, over the wallet's $1.00 cap.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { Receipt } from "mppx";
-import type { Hex } from "viem";
 import type { Agent, AgentResult, Budget, PaidItem, PayFn, Task } from "../lib/agent.ts";
-import { requireEnv } from "../lib/env.ts";
 import { createPay } from "../lib/pay.ts";
-import { currentWindowEndsAt, PER_PAYMENT_CAP_USD } from "../lib/policy.ts";
+import { currentAllowance } from "../lib/policy.ts";
 import { PolicyRefusedError } from "../lib/wallet.ts";
 
 const OUT_DIR = new URL("./out/", import.meta.url);
@@ -78,10 +76,12 @@ const scriptAgent: Agent = {
 
 // The harness role (for now, this file): set the task and budget, hand the agent its way to pay.
 const task: Task = { id: `buy-${reportKey}-report`, instructions: `Buy the ${item.name} and save it.` };
+// The budget is the allowance actually in force: read from the policy attached to the wallet.
+const allowance = await currentAllowance();
 const budget: Budget = {
-  perPaymentCapUsd: PER_PAYMENT_CAP_USD,
-  allowedRecipients: [requireEnv("TEMPO_DEPOSIT_ADDRESS") as Hex],
-  windowEndsAt: await currentWindowEndsAt(),
+  perPaymentCapUsd: allowance.perPaymentCapUsd,
+  allowedRecipients: [allowance.merchant],
+  windowEndsAt: allowance.windowEndsAt,
 };
 
 say(`task: ${task.instructions}${repeat ? ` (repeat every ${everySeconds}s, up to ${maxBuys})` : ""}`);
