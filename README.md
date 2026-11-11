@@ -89,7 +89,7 @@ Every payment attempt logs one line: time, amount, recipient, decision, reason, 
 | `server/` | The paid API, adapted from Stripe's [machine-payments sample](https://github.com/stripe-samples/machine-payments) |
 | `lib/` | All wallet and policy logic: `policy.ts` (rules), `wallet.ts` (every signature goes through here and is logged), `pay.ts` (MPP client), `tempo.ts`, `agent.ts` (the agent interface), `env.ts` |
 | `scripts/` | Setup and checks: create wallet and policy, fund, check Stripe and the policy |
-| `evals/` | Phase 3 (eval harness) |
+| `evals/` | Reserved for an eval harness (on hold) |
 
 ## Known limits
 
@@ -99,7 +99,7 @@ Every payment attempt logs one line: time, amount, recipient, decision, reason, 
 
 ## What's next
 
-Phase 3 turns this into **agent-spend-tests**, an eval kit that measures how often an agent stays inside its spending mandate on its own, and how much the wallet policy catches when it doesn't.
+The agent here is a plain script, so no paid LLM calls are made. Any agent can be plugged in behind the agent interface (`lib/agent.ts`) without changing the wallet, policy or log. An eval harness that measures how often a real LLM agent stays inside its mandate, and how much the wallet catches when it doesn't, is on hold for now.
 
 ## References
 
