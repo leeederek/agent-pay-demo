@@ -29,7 +29,8 @@ async function signAndLog(tx: SignableTransaction, payment: { amountUsd: string;
   } catch (err) {
     result = { decision: "REFUSED", reason: err instanceof Error ? err.message.replace(/\s+/g, " ") : String(err) };
   }
-  logAttempt({ amountUsd: payment.amountUsd, recipient: payment.recipient, ...result });
+  // Never log `signed`: a signed payment can be sent by anyone holding it until it expires.
+  logAttempt({ amountUsd: payment.amountUsd, recipient: payment.recipient, decision: result.decision, reason: result.reason, reference: result.reference });
   return result;
 }
 
