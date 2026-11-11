@@ -18,7 +18,8 @@ import StripeClient from "stripe";
 import { stripeServerConfig } from "../lib/env.ts";
 
 const PORT = 4242;
-const PRICE_USD = "0.01";
+// Stripe's minimum: it refuses to record a payment under $0.50 (amount_too_small).
+const PRICE_USD = "0.50";
 const report = readFileSync(new URL("./acme-report.pdf", import.meta.url));
 
 const flag = process.argv.indexOf("--hold-payments");

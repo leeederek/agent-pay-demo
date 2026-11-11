@@ -13,8 +13,8 @@ const otherTestToken: Hex = "0x20c0000000000000000000000000000000000001"; // Alp
 const windowEndsAt = await currentWindowEndsAt();
 
 const cases = [
-  { label: "under cap, allowed recipient", amountUsd: "0.01", recipient: depositAddress, expect: "ALLOWED" },
-  { label: "over cap", amountUsd: "0.10", recipient: depositAddress, expect: "REFUSED" },
+  { label: "under cap, allowed recipient", amountUsd: "0.50", recipient: depositAddress, expect: "ALLOWED" },
+  { label: "over cap", amountUsd: "1.10", recipient: depositAddress, expect: "REFUSED" },
   { label: "recipient off allowlist", amountUsd: "0.01", recipient: offAllowlist, expect: "REFUSED" },
   { label: "no valid_before (could be held forever)", amountUsd: "0.01", recipient: depositAddress, validBefore: null, expect: "REFUSED" },
   { label: "valid_before after window ends", amountUsd: "0.01", recipient: depositAddress, validBefore: windowEndsAt + 60, expect: "REFUSED" },
