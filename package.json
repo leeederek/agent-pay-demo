@@ -14,7 +14,8 @@
     "wallet:create": "tsx scripts/create-wallet.ts",
     "wallet:fund": "tsx scripts/fund-wallet.ts",
     "policy:create": "tsx scripts/create-policy.ts",
-    "check:policy": "tsx scripts/check-policy.ts"
+    "check:policy": "tsx scripts/check-policy.ts",
+    "test:guardrails": "tsx scripts/test-guardrails.ts"
   },
   "engines": {
     "node": ">=20"

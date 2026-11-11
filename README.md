@@ -53,6 +53,7 @@ You need Node 20+, a [Privy](https://dashboard.privy.io) development app, and a 
 5. Funds: `npm run wallet:fund` (Tempo testnet faucet, test pathUSD).
 6. Policy: `npm run policy:create` (preset `research-hour` by default). It attaches the policy to the wallet and deletes the one it replaces; scripts read the attached policy from Privy, so nothing needs copying (`PRIVY_POLICY_ID` in `.env` is for reference). The allowance window lasts 1 hour; re-run to open a new one.
 7. Check the policy: `npm run check:policy` should print `6/6 cases behaved as expected`.
+8. Check everything end to end: `npm run test:guardrails` should print `8/8 passed` (about 3 minutes; see below).
 
 ## Run
 
@@ -62,6 +63,7 @@ Start the paid API in one terminal and run the agent in another.
 | --- | --- |
 | `npm run server` | Paid API on port 4242: `/report/acme.pdf` ($0.50) and `/report/premium.pdf` ($1.10) |
 | `npm run view` | Live spend view at http://localhost:4243: the allowance in force, a countdown (with the dead-zone warning), and every payment attempt with the wallet's decision, updating every 2s |
+| `npm run test:guardrails` | Runs every scenario below against the real server, wallet, Tempo and Stripe, and reports pass/fail: policy checks, a good payment recorded by Stripe, over the cap, lookalike merchant, held payment, dead zone, window closed. Opens short windows while it runs and restores a fresh default policy at the end. About 3 minutes and ~$2.50 of test pathUSD; needs port 4242 free |
 | `npm run validate` | Checks the server end to end with `mppx validate` (pays from mppx's own test wallet) |
 | `npm run agent` | The agent buys the Acme report from the Privy wallet and saves it to `agent/out/` |
 | `npm run agent -- --report premium` | Tries the $1.10 report: refused, over the $1.00 cap |
@@ -88,7 +90,7 @@ Every payment attempt logs one line: time, amount, recipient, decision, reason, 
 | `view/` | The live spend view (read-only; reads `logs/payments.jsonl` and the attached policy) |
 | `server/` | The paid API, adapted from Stripe's [machine-payments sample](https://github.com/stripe-samples/machine-payments) |
 | `lib/` | All wallet and policy logic: `policy.ts` (rules), `wallet.ts` (every signature goes through here and is logged), `pay.ts` (MPP client), `tempo.ts`, `agent.ts` (the agent interface), `env.ts` |
-| `scripts/` | Setup and checks: create wallet and policy, fund, check Stripe and the policy |
+| `scripts/` | Setup and checks: create wallet and policy, fund, check Stripe and the policy, and the guardrail test suite (`test-guardrails.ts`) |
 | `evals/` | Reserved for an eval harness (on hold) |
 
 ## Known limits
