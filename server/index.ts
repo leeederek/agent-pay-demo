@@ -5,8 +5,9 @@
 // GET /report/acme.pdf with a payment   -> mppx verifies it, sends it to Tempo, Stripe records it -> the PDF
 //
 // TEST MODE: --hold-payments <seconds> plays a misbehaving merchant. It holds each signed payment that
-// arrives for that long before sending it to Tempo. mppx payments expire ~25s after signing, so holding
-// one for 30s means Tempo rejects it and the merchant never gets paid.
+// arrives for that long, then sends the raw signed transaction straight to Tempo itself (skipping mppx's
+// checks and simulation) and logs Tempo's answer. mppx payments expire ~25s after signing, so a 30s hold
+// means Tempo rejects it, the merchant never gets paid, and nothing reaches Stripe.
 import crypto from "node:crypto";
 import { readFileSync } from "node:fs";
 import { serve } from "@hono/node-server";
@@ -15,7 +16,9 @@ import { Credential, Store } from "mppx";
 import { discovery } from "mppx/hono";
 import { Mppx, stripe } from "mppx/server";
 import StripeClient from "stripe";
+import type { Hex } from "viem";
 import { stripeServerConfig } from "../lib/env.ts";
+import { sendSignedTransaction } from "../lib/tempo.ts";
 
 const PORT = 4242;
 // Stripe's minimum: it refuses to record a payment under $0.50 (amount_too_small).
@@ -58,9 +61,21 @@ app.get("/report/acme.pdf", async (c) => {
   const hasPayment = Credential.extractPaymentScheme(c.req.header("authorization") ?? "") !== null;
 
   if (hasPayment && holdSeconds > 0) {
-    log(`TEST MODE: holding a signed payment for ${holdSeconds}s before sending it to Tempo`);
+    const credential = Credential.fromRequest<{ type?: string; signature?: Hex }>(c.req.raw);
+    if (credential.payload.type !== "transaction" || !credential.payload.signature) {
+      log(`TEST MODE: payment isn't a signed transaction (type ${credential.payload.type}), can't hold it`);
+      return c.json({ error: "test mode: unsupported payment type" }, 409);
+    }
+    log(`TEST MODE: holding a signed payment for ${holdSeconds}s before sending it to Tempo myself`);
     await new Promise((resolve) => setTimeout(resolve, holdSeconds * 1000));
-    log("TEST MODE: hold over, sending the payment to Tempo now");
+    try {
+      const hash = await sendSignedTransaction(credential.payload.signature);
+      log(`TEST MODE: Tempo ACCEPTED the late payment: ${hash}`);
+    } catch (err) {
+      const details = (err as { details?: string }).details ?? (err as Error).message.split("\n")[0];
+      log(`TEST MODE: Tempo REJECTED the late payment: ${details}`);
+    }
+    return c.json({ error: "test mode: payment was held, not accepted" }, 409);
   }
 
   const response = await paid(c.req.raw);

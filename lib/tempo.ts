@@ -1,6 +1,7 @@
 // Tempo testnet: building payment transactions, balances, and the testnet faucet.
 // Scripts and agents get transactions from here; they never encode calldata themselves.
 import { createClient, encodeFunctionData, http, pad, parseUnits, type Hex } from "viem";
+import { sendRawTransaction } from "viem/actions";
 import { tempoModerato } from "viem/chains";
 import { Abis, Actions } from "viem/tempo";
 import { TEMPO_TESTNET_CHAIN_ID, USD_TOKEN, USD_TOKEN_DECIMALS } from "./policy.ts";
@@ -50,6 +51,12 @@ export type PaymentTransaction = ReturnType<typeof paymentTransaction>;
 export async function usdBalance(address: Hex): Promise<string> {
   const balance = await Actions.token.getBalance(client, { account: address, token: USD_TOKEN });
   return balance.formatted;
+}
+
+// Sends an already-signed transaction straight to Tempo, with no simulation or checks first.
+// Used by the server's held-payment test mode to play a merchant that skips mppx.
+export async function sendSignedTransaction(serialized: Hex): Promise<Hex> {
+  return sendRawTransaction(client, { serializedTransaction: serialized as `0x76${string}` });
 }
 
 // Asks the testnet faucet (tempo_fundAddress) to mint test stablecoins, including the USD token, to `address`.
