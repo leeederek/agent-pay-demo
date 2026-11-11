@@ -15,7 +15,18 @@ const client = createClient({ chain: tempoModerato, transport: http() });
 
 // A Tempo (type 118) transaction paying `amountUsd` of the USD token to `recipient`, the same shape
 // mppx builds: one transferWithMemo call. Gas and fee values only need to be plausible for sign-only use.
-export function paymentTransaction({ recipient, amountUsd }: { recipient: Hex; amountUsd: string }) {
+// `validBefore` defaults to 60s from now; pass null to leave it out (the policy should refuse that).
+export function paymentTransaction({
+  recipient,
+  amountUsd,
+  validBefore = Math.floor(Date.now() / 1000) + 60,
+  feeToken = USD_TOKEN,
+}: {
+  recipient: Hex;
+  amountUsd: string;
+  validBefore?: number | null;
+  feeToken?: Hex;
+}) {
   const data = encodeFunctionData({
     abi: Abis.tip20,
     functionName: "transferWithMemo",
@@ -29,8 +40,8 @@ export function paymentTransaction({ recipient, amountUsd }: { recipient: Hex; a
     gas: 100_000n,
     maxFeePerGas: 20_000_000_000n,
     maxPriorityFeePerGas: 0n,
-    feeToken: USD_TOKEN,
-    validBefore: Math.floor(Date.now() / 1000) + 60,
+    feeToken,
+    ...(validBefore === null ? {} : { validBefore }),
   };
 }
 
