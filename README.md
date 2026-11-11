@@ -93,7 +93,7 @@ Every payment attempt logs one line: time, amount, recipient, decision, reason, 
 
 ## Known limits
 
-- Stripe records a payment only if it the payment is $0.50 or more, so the report costs $0.50.
+- Stripe records a payment only if the payment is $0.50 or more, so the report costs $0.50.
 - Privy can't enforce a cumulative (daily or total) cap on Tempo transactions, so the policy has per-payment, recipient and time limits only.
 - mppx payments expire about 25 seconds after signing, so in the last ~25 seconds of a window the wallet refuses new payments; that's what guarantees none can land after the window closes.
 
