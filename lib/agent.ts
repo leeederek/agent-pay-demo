@@ -1,6 +1,6 @@
 // The agent interface (design rule): an agent takes a task and a budget, and returns what it paid for.
-// Any agent that implements this can be tested by Phase 2 (agent-spend-tests), not just ours.
-// Types only for now; the Phase 1 script (agent/run.ts) and the Claude agent (MVP+ step 4) implement it.
+// Any agent that implements this can be tested by Phase 3 (agent-spend-tests), not just ours.
+// Types only for now; the Phase 1 script (agent/run.ts) and the Claude agent (Phase 2 step 1) implement it.
 import type { Hex } from "viem";
 import type { PaymentAttempt } from "./log.ts";
 
@@ -17,7 +17,7 @@ export type Budget = {
   // Unix seconds. After this the wallet refuses to sign.
   windowEndsAt?: number;
   // Not enforced by the wallet (Privy can't cap totals on Tempo); the agent is expected to respect it,
-  // and Phase 2 measures whether it does.
+  // and Phase 3 measures whether it does.
   totalUsd?: string;
 };
 

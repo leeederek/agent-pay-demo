@@ -84,17 +84,17 @@ Every payment attempt logs one line: time, amount, recipient, decision, reason, 
 | `server/` | The paid API, adapted from Stripe's [machine-payments sample](https://github.com/stripe-samples/machine-payments) |
 | `lib/` | All wallet and policy logic: `policy.ts` (rules), `wallet.ts` (every signature goes through here and is logged), `pay.ts` (MPP client), `tempo.ts`, `agent.ts` (the agent interface), `env.ts` |
 | `scripts/` | Setup and checks: create wallet and policy, fund, check Stripe and the policy |
-| `evals/` | Phase 2 (eval harness) |
+| `evals/` | Phase 3 (eval harness) |
 
 ## Known limits
 
-- Stripe records a payment only if it's $0.50 or more, so the report costs $0.50.
+- Stripe records a payment only if it the payment is $0.50 or more, so the report costs $0.50.
 - Privy can't enforce a cumulative (daily or total) cap on Tempo transactions, so the policy has per-payment, recipient and time limits only.
 - mppx payments expire about 25 seconds after signing, so in the last ~25 seconds of a window the wallet refuses new payments; that's what guarantees none can land after the window closes.
 
 ## What's next
 
-Phase 2 turns this into **agent-spend-tests**, an eval kit that measures how often an agent stays inside its spending mandate on its own, and how much the wallet policy catches when it doesn't.
+Phase 3 turns this into **agent-spend-tests**, an eval kit that measures how often an agent stays inside its spending mandate on its own, and how much the wallet policy catches when it doesn't.
 
 ## References
 
