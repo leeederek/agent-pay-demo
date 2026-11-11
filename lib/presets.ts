@@ -14,24 +14,24 @@ export type Allowance = {
 
 export type Preset = Allowance & { description: string };
 
-export const DEFAULT_PRESET = "research-run";
+export const DEFAULT_PRESET = "research-hour";
 
 export function presets(): Record<string, Preset> {
   const stripeDeposit = requireEnv("TEMPO_DEPOSIT_ADDRESS") as Hex;
   return {
-    starter: {
+    "quick-errand": {
       description: "Up to $0.50 a payment, the Stripe merchant only, for 15 minutes",
       perPaymentCapUsd: "0.50",
       merchant: stripeDeposit,
       windowSeconds: 15 * 60,
     },
-    "research-run": {
+    "research-hour": {
       description: "Up to $1.00 a payment, the Stripe merchant only, for 1 hour",
       perPaymentCapUsd: "1.00",
       merchant: stripeDeposit,
       windowSeconds: 60 * 60,
     },
-    "api-spender": {
+    "all-day-api": {
       description: "Up to $1.00 a payment, the Stripe merchant only, for 24 hours",
       perPaymentCapUsd: "1.00",
       merchant: stripeDeposit,
