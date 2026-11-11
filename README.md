@@ -61,6 +61,7 @@ Start the paid API in one terminal and run the agent in another.
 | Command | What it does |
 | --- | --- |
 | `npm run server` | Paid API on port 4242: `/report/acme.pdf` ($0.50) and `/report/premium.pdf` ($1.10) |
+| `npm run view` | Live spend view at http://localhost:4243: the allowance in force, a countdown (with the dead-zone warning), and every payment attempt with the wallet's decision, updating every 2s |
 | `npm run validate` | Checks the server end to end with `mppx validate` (pays from mppx's own test wallet) |
 | `npm run agent` | The agent buys the Acme report from the Privy wallet and saves it to `agent/out/` |
 | `npm run agent -- --report premium` | Tries the $1.10 report: refused, over the $1.00 cap |
@@ -84,6 +85,7 @@ Every payment attempt logs one line: time, amount, recipient, decision, reason, 
 | Folder | What lives there |
 | --- | --- |
 | `agent/` | The paying agent (`run.ts`), behind the agent interface |
+| `view/` | The live spend view (read-only; reads `logs/payments.jsonl` and the attached policy) |
 | `server/` | The paid API, adapted from Stripe's [machine-payments sample](https://github.com/stripe-samples/machine-payments) |
 | `lib/` | All wallet and policy logic: `policy.ts` (rules), `wallet.ts` (every signature goes through here and is logged), `pay.ts` (MPP client), `tempo.ts`, `agent.ts` (the agent interface), `env.ts` |
 | `scripts/` | Setup and checks: create wallet and policy, fund, check Stripe and the policy |

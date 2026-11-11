@@ -7,6 +7,7 @@
   "scripts": {
     "server": "tsx server/index.ts",
     "agent": "tsx agent/run.ts",
+    "view": "tsx view/index.ts",
     "validate": "npx mppx@latest validate http://localhost:4242",
     "typecheck": "tsc --noEmit",
     "check:stripe": "tsx scripts/check-stripe.ts",

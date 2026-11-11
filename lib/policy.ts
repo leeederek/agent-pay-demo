@@ -85,6 +85,8 @@ export async function currentAllowance(): Promise<{
   name: string;
   perPaymentCapUsd: string;
   merchant: Hex;
+  // Unix seconds. The window opens when the policy is created.
+  windowStartedAt: number;
   windowEndsAt: number;
 }> {
   const privy = privyClient();
@@ -102,6 +104,7 @@ export async function currentAllowance(): Promise<{
     name: policy.name,
     perPaymentCapUsd: formatUnits(BigInt(find("ethereum_calldata", "transferWithMemo.amount")), USD_TOKEN_DECIMALS),
     merchant: find("ethereum_calldata", "transferWithMemo.to") as Hex,
+    windowStartedAt: Math.floor(policy.created_at / 1000),
     windowEndsAt: Number(find("system", "current_unix_timestamp")),
   };
 }
