@@ -18,5 +18,15 @@ export function stripeSecretKey(): string {
   return key;
 }
 
+// What the paid API needs to take payments through Stripe. Sandbox only: livemode is always false.
+export function stripeServerConfig() {
+  return {
+    secretKey: stripeSecretKey(),
+    profileId: requireEnv("STRIPE_PROFILE_ID"),
+    tempoDepositAddress: requireEnv("TEMPO_DEPOSIT_ADDRESS"),
+    livemode: false as const,
+  };
+}
+
 // Preview API version used by Stripe's MPP guide for profiles and deposit addresses.
 export const STRIPE_PREVIEW_VERSION = "2026-07-29.preview";
